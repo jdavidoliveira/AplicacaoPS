@@ -3,34 +3,19 @@ import { Input } from "./components/ui/input"
 import { Label } from "./components/ui/label"
 import { Separator } from "./components/ui/separator"
 import { Airplay } from "lucide-react"
-import React, { useState } from 'react';
-import { ipcRenderer } from 'electron';
+import { useState } from 'react';
 
 
 function App() {
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
 
-  // Função para lidar com a seleção de arquivos PDF
-  const handleFileSelection = () => {
-    ipcRenderer.send('open-file-dialog');
-  };
+  function handleFileSelection() {
+    setSelectedFiles(["Arquivo 1"])
+  }
+  function convertToJPEG() {
+    alert(JSON.stringify(selectedFiles))
+  }
 
-  // Função para processar os arquivos PDF selecionados
-  const convertToJPEG = () => {
-    // Verifique se há arquivos selecionados
-    if (selectedFiles.length === 0) {
-      alert('Selecione um ou mais arquivos PDF antes de converter.');
-      return;
-    }
-
-    // Agora você pode chamar a função processPDFs passando selectedFiles
-    // processPDFs(selectedFiles);
-  };
-
-  // Evento para receber os arquivos selecionados do processo principal
-  ipcRenderer.on('selected-files', (event, files) => {
-    setSelectedFiles(files);
-  });
 
   return (
     <div className="min-h-screen flex flex-col">
