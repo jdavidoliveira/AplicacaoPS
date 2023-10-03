@@ -31,6 +31,8 @@
     "electron-updater": "^6.1.1",
     "lucide-react": "^0.279.0",
     "path": "^0.12.7",
+    "pdf-poppler": "^0.2.1",
+    "sharp": "^0.32.6",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7"
   },

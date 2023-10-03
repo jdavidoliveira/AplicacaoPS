@@ -1,21 +1,40 @@
-import { Button } from "./components/ui/button"
-import { Input } from "./components/ui/input"
-import { Label } from "./components/ui/label"
-import { Separator } from "./components/ui/separator"
-import { Airplay } from "lucide-react"
+import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
+import { Label } from './components/ui/label'
+import { Separator } from './components/ui/separator'
+import { Airplay } from 'lucide-react'
 import { useState } from 'react';
 
+const { ipcRenderer } = window.electron;
 
 function App() {
-  const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
 
-  function handleFileSelection() {
-    setSelectedFiles(["Arquivo 1"])
-  }
-  function convertToJPEG() {
-    alert(JSON.stringify(selectedFiles))
-  }
+  // Escute a resposta do processo principal.
+  ipcRenderer.on('conversion-complete', (event, result) => {
+    if (result.success) {
+      console.log('PDF convertido com sucesso:', result.outputPath);
+      alert('PDF convertido com sucesso:'+ result.outputPath);
+    } else {
+      console.error('Erro na conversão:', result.error);
+      alert('Erro na conversão:'+ result.error);
+    }
+  });
+  const [selectedFiles, setSelectedFiles] = useState<File[] | any>([]);
 
+  function handleFileSelection(e: React.ChangeEvent<HTMLInputElement>) {
+    setSelectedFiles(e.target.files);
+    console.log(e.target.files)
+  }
+  async function convertToJPEG() {
+    console.log(selectedFiles)
+    for (const file of selectedFiles) {
+      const pdfPath = file.path
+      // const outputPath = `C:/Users/Estágio/Downloads`
+      console.log(pdfPath)
+      ipcRenderer.send('convert-pdf-to-image', { pdfPath });
+    }
+
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,6 +65,7 @@ function App() {
               multiple
               accept="application/pdf"
               onChange={handleFileSelection}
+
             />
             <Button onClick={convertToJPEG}>Converter para JPEG</Button>
           </div>

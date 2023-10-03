@@ -1,12 +1,14 @@
-import { app, shell, BrowserWindow } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { join, dirname, basename, extname } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import pdfPoppler from 'pdf-poppler'
+import sharp from 'sharp'; // Adicione o 'sharp' como uma dependência
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
+    width: 1200,
     height: 670,
     show: false,
     autoHideMenuBar: true,
@@ -58,9 +60,42 @@ app.whenReady().then(() => {
   })
 })
 
+
+ipcMain.on('convert-pdf-to-image', (event, { pdfPath, outputPath = './testes/' }) => {
+  const options = {
+    format: 'jpeg',
+    out_dir: dirname(outputPath),
+    out_prefix: basename(pdfPath),
+    page: 1,
+  };
+
+  pdfPoppler.convert(pdfPath, options)
+    .then(() => {
+      const outputImagePath = join(outputPath, 'conversao-1.jpg'); // Caminho completo do arquivo de imagem gerado
+
+      // Após a conversão para JPEG, processar a imagem usando o 'sharp'
+      sharp(outputImagePath)
+        .extract({ left: 0, top: 0, width: 340, height: 170 }) // Coordenadas de corte (ajuste conforme necessário)
+        .rotate(-90) // Girar a imagem original em -90 graus (esquerda)
+        .toFile(join(outputPath, `RDM ${basename(pdfPath, ".jpg")}`), (err, info) => {
+          if (err) {
+            event.sender.send('conversion-complete', { success: false, error: err.message });
+          } else {
+            event.sender.send('conversion-complete', { success: true, outputPath: `RDM ${basename(pdfPath), ".jpg"}` });
+          }
+        });
+    })
+    .catch(error => {
+      event.sender.send('conversion-complete', { success: false, error: error.message });
+    });
+});
+
+
+
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
