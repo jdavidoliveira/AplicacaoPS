@@ -8,15 +8,25 @@ import { useState } from 'react';
 const { ipcRenderer } = window.electron;
 
 function App() {
+  const [avisos, setAvisos] = useState<string[]>([])
 
   // Escute a resposta do processo principal.
   ipcRenderer.on('conversion-complete', (event, result) => {
+    console.log(event)
     if (result.success) {
       console.log('PDF convertido com sucesso:', result.outputPath);
-      alert('PDF convertido com sucesso:'+ result.outputPath);
+      // alert('PDF convertido com sucesso:'+ result.outputPath);
+      setAvisos(prevState => {
+        if (!prevState.includes(result.outputPath)) {
+          return [...prevState, result.outputPath];
+        } else {
+          return prevState;
+        }
+      });
+
     } else {
       console.error('Erro na conversão:', result.error);
-      alert('Erro na conversão:'+ result.error);
+      alert('Erro na conversão:' + result.error);
     }
   });
   const [selectedFiles, setSelectedFiles] = useState<File[] | any>([]);
@@ -30,10 +40,9 @@ function App() {
     for (const file of selectedFiles) {
       const pdfPath = file.path
       // const outputPath = `C:/Users/Estágio/Downloads`
-      console.log(pdfPath)
       ipcRenderer.send('convert-pdf-to-image', { pdfPath });
     }
-
+    alert('Arquivos convertidos com sucesso!');
   }
 
   return (
@@ -68,6 +77,8 @@ function App() {
 
             />
             <Button onClick={convertToJPEG}>Converter para JPEG</Button>
+            <h2 className='text-center'>Arquivos convertidos:</h2>
+            {avisos.length > 0 && <div>{avisos.map((a: string) => <p key={a}>{a}</p>)}</div>}
           </div>
         </div>
       </main>
